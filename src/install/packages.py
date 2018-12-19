@@ -27,8 +27,14 @@ class OS:
         except IndexError:  # Most likely no gcc installed
           self.gccVer = None
 
-        self.kernelVerString = syscall('uname -r')
+	self.kernelVerString = syscall('uname -r')
 
+	osName = syscall('lsb_release -i').split(':')[1].strip()
+
+	if (osName == 'Raspbian'):
+	  self.kernelVerStringName = 'rpi'
+	else:
+          self.kernelVerStringName = self.kernelVerString
 
         self.bit = determine_bit()
 
@@ -192,7 +198,8 @@ class OS:
                             'tar zxf %s' % openhpi.pkg_name,
                             'rm -f %s' % openhpi.pkg_name,
                             'cd openhpi-*',
-                            EXPORT + ' && ./configure --prefix=$PREFIX --with-varpath=$PREFIX/var/lib/openhpi' + log, 
+                            'patch -p0 -i ${WORKING_DIR}/openhpi.patch',
+                            EXPORT + """ && ./configure --prefix=${PREFIX} --with-varpath=${PREFIX}/var/lib/openhpi """ + log, 
                             'make' + log,
                             'make install' + log]
                             
@@ -802,7 +809,7 @@ class Debian(OS):
     def load_preinstall_deps(self):
         
         deps =  ['build-essential',
-                 'linux-headers-' + self.kernelVerString,
+                 'linux-headers-' + self.kernelVerStringName,
                  'gettext',
                  'uuid-dev',
                  'bison',
@@ -841,7 +848,7 @@ class Debian7(OS):
     def load_preinstall_deps(self):
         
         deps =  ['build-essential',
-                 'linux-headers-' + self.kernelVerString,
+                 'linux-headers-' + self.kernelVerStringName,
                  'gettext',
                  'uuid-dev',
                  'bison',
@@ -850,6 +857,41 @@ class Debian7(OS):
                  'libglib2.0-dev',
                  'libgdbm-dev',
                  'libdb5.1-dev',
+                 'libsqlite3-0',
+                 'libsqlite3-dev',
+                 'e2fsprogs',
+                 'libperl-dev',
+                 'libltdl3-dev',
+                 'e2fslibs-dev',
+                 'unzip',
+                 'libsnmp-dev',
+                 'zlib1g-dev',
+                 'psmisc',
+                 'ed']
+
+        for name in deps:
+            D = objects.RepoDep(name)
+            self.pre_dep_list.append(D)
+
+# ------------------------------------------------------------------------------
+class Debian8(OS):
+    
+    def pre_init(self):
+        self.name = 'Debian'
+        self.apt = True
+    
+    def load_preinstall_deps(self):
+        
+        deps =  ['build-essential',
+                 'linux-headers-' + self.kernelVerStringName,
+                 'gettext',
+                 'uuid-dev',
+                 'bison',
+                 'flex',
+                 'gawk',
+                 'libglib2.0-dev',
+                 'libgdbm-dev',
+                 'libdb5.3-dev',
                  'libsqlite3-0',
                  'libsqlite3-dev',
                  'e2fsprogs',
@@ -949,7 +991,9 @@ def determine_os():
                 fh = open('/etc/debian_version')
                 fdata = fh.read().lower()
                 fh.close()
-                if cmp_version(fdata, "7.0") >= 0:
+                if cmp_version(fdata, "8.0") >= 0:
+                    return Debian8()
+                elif cmp_version(fdata, "7.0") >= 0:
                     return Debian7()
                 else:
                     return Debian()
