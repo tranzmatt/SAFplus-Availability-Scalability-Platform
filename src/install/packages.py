@@ -29,13 +29,6 @@ class OS:
 
 	self.kernelVerString = syscall('uname -r')
 
-	osName = syscall('lsb_release -i').split(':')[1].strip()
-
-	if (osName == 'Raspbian'):
-	  self.kernelVerStringName = 'rpi'
-	else:
-          self.kernelVerStringName = self.kernelVerString
-
         self.bit = determine_bit()
 
         self.pre_init()                         # overload pre_init() as needed
@@ -807,9 +800,15 @@ class Debian(OS):
         self.apt = True
     
     def load_preinstall_deps(self):
+
+        osName = syscall('lsb_release -i').split(':')[1].strip()
+	if (osName == 'Raspbian'):
+	  kernelString = 'raspberrypi-kernel-headers'
+	else:
+          kernelString = 'linux-headers-' + self.kernelVerString
         
         deps =  ['build-essential',
-                 'linux-headers-' + self.kernelVerStringName,
+                 kernelString,
                  'gettext',
                  'uuid-dev',
                  'bison',
@@ -846,9 +845,15 @@ class Debian7(OS):
         self.apt = True
     
     def load_preinstall_deps(self):
+
+        osName = syscall('lsb_release -i').split(':')[1].strip()
+	if (osName == 'Raspbian'):
+	  kernelString = 'raspberrypi-kernel-headers'
+	else:
+          kernelString = 'linux-headers-' + self.kernelVerString
         
         deps =  ['build-essential',
-                 'linux-headers-' + self.kernelVerStringName,
+                 kernelString,
                  'gettext',
                  'uuid-dev',
                  'bison',
@@ -881,9 +886,15 @@ class Debian8(OS):
         self.apt = True
     
     def load_preinstall_deps(self):
+
+        osName = syscall('lsb_release -i').split(':')[1].strip()
+	if (osName == 'Raspbian'):
+	  kernelString = 'raspberrypi-kernel-headers'
+	else:
+          kernelString = 'linux-headers-' + self.kernelVerString
         
         deps =  ['build-essential',
-                 'linux-headers-' + self.kernelVerStringName,
+                 kernelString,
                  'gettext',
                  'uuid-dev',
                  'bison',
